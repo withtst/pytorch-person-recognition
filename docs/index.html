@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:47%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:53%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>8</b> / 17 节（阶段 0+1 完结 ✅ · 2.1 模型 ✅ · 2.2 损失 ✅ · 阶段 2 进行中）</p>
+  <p>已完成 <b>9</b> / 17 节（阶段 0+1 完结 ✅ · 2.1-2.3 模型/损失/优化器 ✅ · 阶段 2 进行中）</p>
 </div>
 
 <div class="card">
@@ -265,11 +265,39 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 2.3 · Optimizer 与学习率</h2>
+  <h2>阶段 2.3 · Optimizer 与学习率</h2>
+  <p class="note">本节核心：<b>在玩具双谷函数 <code>f(w)=(w²-1)²</code> 上亲历学习率的三张脸与三种优化器的不同性格</b>。</p>
+
+  <h3>做了什么</h3>
   <ul>
-    <li class="todo">SGD vs Adam：动量与自适应学习率差在哪</li>
-    <li class="todo">lr=0.1 与 lr=1e-4 对 3 步梯度下降的目测差异（数字实验）</li>
-    <li class="todo">梯度到底怎么"下坡"：一张小二维曲面画轨迹（matplotlib）</li>
+    <li>手搓 GD × 3 档 lr：0.02 困守左谷 / 0.05 一步翻脊到右谷 / 0.08 直接 -inf 爆炸（"lr 不能乱大"刻进 DNA）</li>
+    <li>梯度累积实验：两次 backward 不清理 → <code>grad=-1.5→-3.0</code>（×2 累加！）——这就是 <code>zero_grad()</code> 存在的原因</li>
+    <li>优化器对决（诚实成绩单）：<b>SGD 11 步</b>直达左谷；<b>momentum 27 步且翻过山脊落进右谷</b>（惯性跨越名场面）；<b>Adam 55 步</b>匀速稳健</li>
+    <li>轨迹图 <code>lr_plot.png</code> 已入库（含中文标题渲染验证）</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">原理</span> lr 是"步幅"，梯度只给"方向"：小 lr 保守爬坡、大 lr 跨越山脊、超大 lr 震荡发散——梯度就是欲望，学习率是油门</li>
+    <li><span class="tag">原理</span> autograd 梯度会<b>累积</b>（实测 ×2），每轮 <code>backward→step→zero_grad</code> 三件套缺一不可</li>
+    <li><span class="tag">原理</span> momentum 带"历史速度"：能翻过仅靠梯度翻不过的障碍（实测迁移到了对侧谷）——惯性是超调的力量源泉</li>
+    <li><span class="tag">观点</span> 单参数玩具上 SGD 最快！这不是 Adam 的错——真实网络参数尺度千差万别，自适应步长才换挡变速（2.4 实测定乾坤）</li>
+    <li><span class="tag">工程</span> matplotlib 必须指定中文字体（DejaVu 无汉字），无窗口环境用 <code>use("Agg")</code></li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/optimizer_demo.py</code> — 三档 lr 轨迹 / 梯度累积证词 / 三优化器对决图</li>
+    <li><code>lr_plot.png</code> — 优化器轨迹图</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 2.4 · 完整训练循环（大战役开场）</h2>
+  <ul>
+    <li class="todo">把 1.x 数据 + 2.1 模型 + 2.2 损失 + 2.3 优化器接进一个 for 循环</li>
+    <li class="todo">模型上 GPU、<code>model.train()</code> 语义、每 epoch 打训练指标</li>
+    <li class="todo">首战预测：98 个百分比的训练准确率 vs 可怜的验证集——过拟合初态实拍</li>
   </ul>
 </div>
 
