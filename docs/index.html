@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:6%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:12%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>1</b> / 17 节（阶段 0：数据体检与清洗 ✅）</p>
+  <p>已完成 <b>2</b> / 17 节（阶段 0 完结：数据体检 ✅ · 最小 PyTorch 程序 ✅）</p>
 </div>
 
 <div class="card">
@@ -76,12 +76,38 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 0.2 · 最小 PyTorch 程序</h2>
+  <h2>阶段 0.2 · 最小 PyTorch 程序</h2>
+  <p class="note">本节核心：<b>认识 autograd 之前，先认识 tensor 的世界观。</b> 所有后续内容都在这一页的地基上。</p>
+
+  <h3>做了什么</h3>
   <ul>
-    <li class="todo">理解 tensor 的世界观（形状、dtype、device）</li>
-    <li class="todo">亲手确认 GPU 可用：<code>torch.cuda.is_available()</code></li>
-    <li class="todo">第一行 GPU 上的张量运算</li>
-    <li class="done" style="color:var(--green)">✅ git 仓库 + GitHub Pages（本节）</li>
+    <li>创建 tensor，观察 <code>dtype / shape / device</code> 三件套</li>
+    <li>GPU 觉醒：<code>torch.cuda.is_available()=True</code>，硬件 <b>NVIDIA GeForce RTX 5070</b>，<code>x.to("cuda")</code> 完成迁移</li>
+    <li>autograd 初体验：<code>c=a*b</code> 求导，<code>a.grad=4.0, b.grad=3.0</code>（∂c/∂a=b=4 ✓）</li>
+    <li>标量化求导：<code>y=(x×2).sum()</code> → <code>x.grad=[2,2,2]</code>（∂y/∂xi=2 ✓）</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">坑</span> <code>.to("cuda")</code> 返回<b>新张量</b>，原地使用必须 <code>x = x.to("cuda")</code>，否则 device 纹丝不动（真实踩坑）</li>
+    <li><span class="tag">坑</span> 整数张量无法 <code>requires_grad=True</code>；非标量 <code>backward()</code> 直接报 <code>element 0 of tensors does not require grad</code></li>
+    <li><span class="tag">原理</span> autograd = 计算图 + 链式法则。每个算子注册反向函数（sum 的反向 = 全 1 加权），梯度沿图反向传播</li>
+    <li><span class="tag">原理</span> <code>backward(gradient=v)</code> 通用含义是 <b>Jᵀ·v</b>（雅可比转置 × 向量）；标量 loss 默认 v=1 —— 这就是为什么 loss 一定要是标量</li>
+    <li><span class="tag">硬硬件</span> RTX 5070 就位：后续训练全部跑 GPU</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/basics.py</code> — 最小 PyTorch 程序（tensor/GPU/autograd 三合一）</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 1.1 · 手写 Dataset 类</h2>
+  <ul>
+    <li class="todo"><code>__len__</code> / <code>__getitem__</code>：dataset 只是"按编号取数据"的抽象</li>
+    <li class="todo">从零读图：路径 → PIL → 256 边长 tensor</li>
+    <li class="todo">11 个人物名字 → 类别索引（label 编码）</li>
   </ul>
 </div>
 
