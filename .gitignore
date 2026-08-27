@@ -10,6 +10,10 @@ __pycache__/
 *.pyc
 *.pyo
 
+# 训练产物(模型文件过大, 不入仓库; history.json 这类小指标文件保留)
+runs/*.pt
+runs/*.pth
+
 # 编辑器配置
 .vscode/
 .idea/

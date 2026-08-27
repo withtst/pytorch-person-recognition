@@ -56,7 +56,7 @@ python scripts/clean_data.py                   # 隔离异常文件到 data_quar
 | 2 | 2.1 手写 CNN | 卷积/池化/参数量 | ✅ |
 | 2 | 2.2 CrossEntropyLoss | logits 与概率 | ✅ |
 | 2 | 2.3 Optimizer | SGD/Adam/lr | ✅ |
-| 2 | 2.4 训练循环 | forward/loss/backward/step | ⬜ |
+| 2 | 2.4 训练循环 | forward/loss/backward/step | ✅ |
 | 2 | 2.5 验证与模型保存 | state_dict/best model | ⬜ |
 | 3 | 3.1 训练曲线诊断 | 过拟合/欠拟合 | ⬜ |
 | 3 | 3.2 正则化与增强 | weight_decay/dropout/aug | ⬜ |

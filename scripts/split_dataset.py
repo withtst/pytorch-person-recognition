@@ -39,6 +39,34 @@ def print_distribution(ds, subset, title):
         print(f"  [{idx:>2}] {name:20s} {c:>4} 张 (占该人 {pct:5.1f}%)")
 
 
+def get_datasets(root="./data", val_ratio=VAL_RATIO, seed=42,
+                 train_transform=None, val_transform=None):
+    """
+    返回 (train_ds, val_ds): 分层划分 + 固定种子, 直接喂训练循环。
+    train/val 的 transform 未来会不同(train 增强, val 纯净), 所以分开收参。
+    (第 3.2 节: train 加 RandomHorizontalFlip/ColorJitter 等增强时,
+     只改 train_transform, val 永远不动 —— 裁判不能吃兴奋剂。)
+    注意: 可复用函数放在【模块级】, train_cnn.py 才能 import;
+         实验代码面向演示, 工具函数面向复用 —— 工程分层规矩。
+    """
+    import numpy as np
+    rng = np.random.default_rng(seed)            # 独立于 torch 的随机源
+    ds_ = PersonDataset(data_dir=root, transform=train_transform)
+    idxs = np.arange(len(ds_))
+    rng.shuffle(idxs)                            # 类内洗牌实现"随机落到 train/val"
+    idxs = idxs.tolist()                         # 转回 python 列表
+
+    bucket = {}
+    for i in idxs:
+        bucket.setdefault(ds_.images[i][1], []).append(i)
+    v_idx = []
+    for label, lst in sorted(bucket.items()):
+        v_idx.extend(lst[:int(len(lst) * val_ratio + 0.5)])
+    val_set = Subset(ds_, sorted(v_idx))
+    train_set = Subset(ds_, sorted(set(idxs) - set(v_idx)))
+    return train_set, val_set
+
+
 if __name__ == "__main__":
     ds = PersonDataset()
     cnt_by_class = Counter(l for _, l in ds.images)     # 每人总数字典
@@ -119,36 +147,6 @@ if __name__ == "__main__":
     print_distribution(ds, train_strat, "train(分层)")
     print(f"  注意: 分层后 val 总量 {len(val_strat)} 可能和 random_split 的 {len(val_all)} 差几张,")
     print("        这是逐类四舍五入的累计差, 合理范围, 不要迷信总数一致。")
-
-    # ========================================================================
-    # 4. 项目正式接口 get_datasets(为 2.x 章节预留)
-    # ========================================================================
-    def get_datasets(root="./data", val_ratio=VAL_RATIO, seed=42,
-                     train_transform=None, val_transform=None):
-        """
-        返回 (train_ds, val_ds), 分层划分 + 固定种子, 直接喂训练循环。
-        train/val 的 transform 未来会不同(train 增强, val 纯净), 所以分开收参。
-        (第 3.2 节: train 加 RandomHorizontalFlip/ColorJitter 等增强时,
-         只改 train_transform, val 永远不动 —— 裁判不能吃兴奋剂。)
-        """
-        import numpy as np
-        rng = np.random.default_rng(seed)            # 独立于 torch 的随机源
-        ds_ = PersonDataset(data_dir=root, transform=train_transform)
-        idxs = np.arange(len(ds_))
-        rng.shuffle(idxs)                            # 类内洗牌实现"随机落到 train/val"
-        idxs = idxs.tolist()                         # 转回 python 列表
-
-        bucket = {}
-        for i in idxs:
-            bucket.setdefault(ds_.images[i][1], []).append(i)
-        v_idx = []
-        for label, lst in sorted(bucket.items()):
-            v_idx.extend(lst[:int(len(lst) * val_ratio + 0.5)])
-        val_set = Subset(ds_, sorted(v_idx))
-        train_set = Subset(ds_, sorted(set(idxs) - set(v_idx)))
-        # 当前两人共用同一 transform; 第 3.2 节引入训练增强时, 需要各自独立
-        # PersonDataset(get_datasets 再扩展), val 永远拿"无增强"版本 —— 裁判不能吃兴奋剂。
-        return train_set, val_set
 
     print("\n" + "=" * 70)
     print("【实验 4】get_datasets(): 项目正式接口自检")
