@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:82%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:100%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>14</b> / 17 节（阶段 0-2 完结 ✅ · 阶段 3 诊断提升完结 ✅ → 阶段 4 迁移学习）</p>
+  <p>已完成 <b>17</b> / 17 节 —— <b>全项目收官</b> 🎓 从数据体检到迁移学习</p>
 </div>
 
 <div class="card">
@@ -420,11 +420,55 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 4.1 · 迁移学习（选做变必做）</h2>
+  <h2>阶段 4.1 · 迁移学习 ResNet18</h2>
+  <p class="note">本节核心：<b>站在巨人肩膀上</b>——ImageNet 的 128 万张图教会 ResNet 的，我们免费取用。</p>
+
+  <h3>决战登记（三条路线同一验证集）</h3>
   <ul>
-    <li class="todo">ResNet18 预训练：什么是"前人的智慧"（ImageNet 的 1000 类特征）</li>
-    <li class="todo">冻结骨干 + 只训新头部（优化器只认识新参数——2.3 实验 4 的伏笔回收）</li>
-    <li class="todo">对照：85.18%（从头）→ ？%（迁移）</li>
+    <li>2.4 从头训练 67M 参数 → <b>85.18%</b>（过拟合，训练集背到 100%）</li>
+    <li>3.2 四武器正则化 → <b>84.61%</b>（稳健但未赢分）</li>
+    <li><b>4.1 迁移学习 → 87.57% ✅</b>：只训练 <b>5,643 个参数（0.05%）</b>！训练 88.5% vs 验证 87.6%（gap 仅 0.9pp，过拟合清零）</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">原理</span> 迁移 = 复用"边缘→纹理→部件→物体"四级金字塔；骨干冻结（<code>requires_grad_(False)</code>），只学把被包新空间切出 11 个脸——优化器只登记新头（2.3 实验 4 伏笔回收）</li>
+    <li><span class="tag">暗号</span> 预训练模型只认当年的归一化：ImageNet mean/std（0.485/0.456/0.406）——换了自己的统计量它就会"失明"</li>
+    <li><span class="tag">姿势</span> 输入 224（ResNet 出厂尺寸）而非 256；参数预算表：11.2M 总量 vs 5.6K 可训练——"巨人肩上"的真实含义</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/transfer.py</code> — 冻结骨干 + 换头 + 头寄存器优化器</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>阶段 5.1 · 推理 CLI（终局画面）</h2>
+  <p class="note">本节核心：<b>"她是 X（45%）"背后的四件套工程契约</b>——结构一致、预处理一致、eval+no_grad、map_location 跨设备。</p>
+  <ul>
+    <li>实测：<code>predict.py --image data/9.媛媛/0000000000000.JPG</code> → Top1 <b>9.媛媛 44.8%</b>，Top2 蟹蟹光临 25.0%，合理推断</li>
+    <li>抽查 5 张全部判对（置信度 39%~95% 分布自然）</li>
+    <li><span class="tag">踩坑</span> 又踩一次 GBK 老雷（✓/✗ 打印崩）——教训已缝进习惯：stdout 只用 ASCII，文件里任意</li>
+  </ul>
+  <h3>相关代码</h3>
+  <ul><li><code>scripts/predict.py</code> — --image / --demo 双模式推理</li></ul>
+</div>
+
+<div class="card">
+  <h2>阶段 5.2 · 项目总结</h2>
+  <p class="note">17 节课独立完成的完整项目：11 人识别器 + 全程教案 + 踩坑日志 + 教学复盘。</p>
+  <h3>三句话总结</h3>
+  <ul>
+    <li><b>数据是一切</b>：5 个异常文件、10 倍类别差、15.4pp 过拟合鸿沟——全部在用数字说话后才敢迈下一步</li>
+    <li><b>容量是债</b>：68M 参数对 4k 数据过拟合是数学必然；正则化只买时间，结构性换思考才是解药（迁移 5.6K 参数反超）</li>
+    <li><b>工程与数学都要</b>：种子纪律、best-model 刹车、GBK 字符、Normalize 的 inplace 地雷——严谨细读文档 + 每次改完跑一遍</li>
+  </ul>
+  <h3>下一步（可选坑位）</h3>
+  <ul>
+    <li>全连接灾难救援：把 fc1 131072 路砍到 512 的"缩小版"重打全场</li>
+    <li>Web UI：Flask + HTML 上传图片"她是谁？"部署到线上</li>
+    <li>细粒度姿势：人脸对齐/检测流水线（RetinaFace + ArcFace）进阶课</li>
   </ul>
 </div>
 
