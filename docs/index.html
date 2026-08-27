@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:41%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:47%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>7</b> / 17 节（阶段 0+1 完结 ✅ · 2.1 手写 CNN ✅ · 阶段 2 进行中）</p>
+  <p>已完成 <b>8</b> / 17 节（阶段 0+1 完结 ✅ · 2.1 模型 ✅ · 2.2 损失 ✅ · 阶段 2 进行中）</p>
 </div>
 
 <div class="card">
@@ -237,11 +237,39 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 2.2 · CrossEntropyLoss</h2>
+  <h2>阶段 2.2 · CrossEntropyLoss</h2>
+  <p class="note">本节核心：<b>弄懂"打分→损失"这架机器</b>——logits 如何经 softmax 变成概率，再变成唯一一个训练能听懂的标量。</p>
+
+  <h3>做了什么</h3>
   <ul>
-    <li class="todo">logits → softmax → log → 负对数似然：一条链为什么是"同一件事"</li>
-    <li class="todo">手算一个 4 类小例子的 loss，证实 <code>nn.CrossEntropyLoss</code> 不做 softmax 的原因</li>
-    <li class="todo">label smoothing 是什么、什么时候值得用</li>
+    <li>手算 4 类样例对账：0.036775 vs torch <b>0.036778</b> ✓（附三大手算翻车姿势）</li>
+    <li>组合拳验证：<code>nll_loss(log_softmax(x))</code> ≡ <code>cross_entropy(x)</code>（完全一致）——官方文档的"合成体"实锤</li>
+    <li>置信度稀释 ×100：loss 1.34 → 逼近 <b>ln(4)=1.386</b>（随机猜测的天花板）</li>
+    <li>label_smoothing=0.1：loss 从 0.037 升到 <b>0.486</b>——防"自信过头"的对策</li>
+    <li>零训练实测：随机初始化模型 loss=<b>2.3919</b> ≈ ln(11)=2.3979 ——"loss≈2.4 别庆祝，它只是在抛硬币"</li>
+    <li>数值灾难：logits×1000 后手写 softmax → <code>nan</code>；torch 融合路径稳如老狗</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">原理</span> 负对数 = 惩罚映射：猜对且自信→0 罚，猜对但心虚→小罚，几乎没猜到→天罚（ln 陡尾逼出置信度）</li>
+    <li><span class="tag">原理</span> CE 为什么"不用 softmax"：它内部融合了 log_softmax（log-sum-exp max 平移技巧），人为拆开会溢出（实测 <code>nan</code>）</li>
+    <li><span class="tag">基准</span> 训练任意随机模型，loss≈ln(11)=2.398 起跑；低于 2.0（最好 1.0 以下）才算学到真东西</li>
+    <li><span class="tag">工程</span> label_smoothing 会让最小 loss 抬升——读曲线时别误判"变差"</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/loss_demo.py</code> — 5 个实验（对账/恒等式/稀释/基准/稳定性）</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 2.3 · Optimizer 与学习率</h2>
+  <ul>
+    <li class="todo">SGD vs Adam：动量与自适应学习率差在哪</li>
+    <li class="todo">lr=0.1 与 lr=1e-4 对 3 步梯度下降的目测差异（数字实验）</li>
+    <li class="todo">梯度到底怎么"下坡"：一张小二维曲面画轨迹（matplotlib）</li>
   </ul>
 </div>
 
