@@ -51,7 +51,7 @@ python scripts/clean_data.py                   # 隔离异常文件到 data_quar
 | 0 | 0.2 Git 仓库与最小 PyTorch 程序 | 工程化 + GPU 感知 tensor | ✅ |
 | 1 | 1.1 手写 Dataset | __getitem__/__len__ 理解 | ✅ |
 | 1 | 1.2 transforms | Resize/ToTensor/Normalize | ✅ |
-| 1 | 1.3 DataLoader | batch 维度 B,C,H,W | ⬜ |
+| 1 | 1.3 DataLoader | batch 维度 B,C,H,W | ✅ |
 | 1 | 1.4 数据划分 | train/val 分离 | ⬜ |
 | 2 | 2.1 手写 CNN | 卷积/池化/参数量 | ⬜ |
 | 2 | 2.2 CrossEntropyLoss | logits 与概率 | ⬜ |
