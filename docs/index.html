@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:65%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:71%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>11</b> / 17 节（阶段 0+1+2 完结 ✅ · 阶段 3 诊断提升进行中）</p>
+  <p>已完成 <b>12</b> / 17 节（阶段 0-2 完结 ✅ · 3.1 曲线诊断 ✅ · 3.2 迎战过拟合 →）</p>
 </div>
 
 <div class="card">
@@ -345,11 +345,37 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 3.1 · 训练曲线诊断</h2>
+  <h2>阶段 3.1 · 训练曲线诊断</h2>
+  <p class="note">本节核心：<b>曲线医生出报告</b>——把 history.json 变成能"看病"的图。</p>
+
+  <h3>诊断结果（自动判定，非嘴说）</h3>
   <ul>
-    <li class="todo">把 history.json 画成图：loss 双线 + acc 双线</li>
-    <li class="todo">目视判读：谁在 Epoch 6 后"拐头向上"了？这就是报警器</li>
-    <li class="todo">过拟合的完整定义（训练↔验证鸿沟 + 验证拐点）</li>
+    <li>训练 loss：2.108 → 0.531（一直下降：模型死记硬背中）</li>
+    <li><b>验证 loss 最小点 = Epoch 7（0.9348）</b>，之后反弹——过拟合转发的发令枪就在这一脚</li>
+    <li>末轮鸿沟 <b>15.4 个百分点</b>（训练 100.0% vs 验证 84.6%）</li>
+    <li>处方已开：3.2 增强 + 正则化 + Dropout + 真实统计量 + 减全连接黑洞</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">读数</span> 过拟合三条判定线：训练 loss 继续降 + 验证 loss 拐头上行 + 训练/验证 acc 鸿沟扩大</li>
+    <li><span class="tag">验证</span> best-model 存档的自动"刹车"价值：best 停在 Epoch 7（85.2%）> Epoch 8（84.6%）——2.5 节的设计直接兑换了真性能</li>
+    <li><span class="tag">工程</span> 曲线存档标准：loss/acc 双线 2.4 节记 JSON，3.1 节专职绘画——数据与展示分离</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/plot_curves.py</code> — 画图 + 自动诊断（拐点检测/鸿沟计算）</li>
+    <li><code>runs/curves.png</code> — 四线图（loss ×2 + acc ×2）</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 3.2 · 正则化与数据增强（迎战过拟合）</h2>
+  <ul>
+    <li class="todo">真实 mean/std（1.2 节伏笔：0.50 太嫩，实测 ≈0.55/0.30）</li>
+    <li class="todo">RandomHorizontalFlip + ColorJitter + weight_decay + Dropout 四件套</li>
+    <li class="todo">与 2.4 基准对比：本轮验证准确率能"越狱"几个百分点</li>
   </ul>
 </div>
 
