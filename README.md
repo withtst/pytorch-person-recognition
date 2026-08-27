@@ -68,4 +68,13 @@ python scripts/clean_data.py                   # 隔离异常文件到 data_quar
 ## 学习站点
 
 每完成一章，会向 `docs/` 追加一份学习记录页面（代码 + 笔记 + 心得），
-全部完成后由 GitHub Pages 发布（地址待更新）。
+已由 GitHub Pages 发布：
+
+**https://withtst.github.io/pytorch-person-recognition/**
+
+站点结构：
+```
+docs/
+├── index.html          # 学习站点首页（进度 + 各章记录, 随章节持续更新）
+└── (章节页面随进度追加)
+```
