@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:12%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:18%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>2</b> / 17 节（阶段 0 完结：数据体检 ✅ · 最小 PyTorch 程序 ✅）</p>
+  <p>已完成 <b>3</b> / 17 节（阶段 0 完结 ✅ · 阶段 1.1 手写 Dataset ✅）</p>
 </div>
 
 <div class="card">
@@ -103,11 +103,38 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 1.1 · 手写 Dataset 类</h2>
+  <h2>阶段 1.1 · 手写 Dataset 类</h2>
+  <p class="note">本节核心：Dataset 只是<b>"按编号取数据"的抽象接口</b>——两个方法 <code>__len__</code> + <code>__getitem__</code>，学会它你就看懂了所有数据管线。</p>
+
+  <h3>做了什么</h3>
   <ul>
-    <li class="todo"><code>__len__</code> / <code>__getitem__</code>：dataset 只是"按编号取数据"的抽象</li>
-    <li class="todo">从零读图：路径 → PIL → 256 边长 tensor</li>
-    <li class="todo">11 个人物名字 → 类别索引（label 编码）</li>
+    <li><code>__init__</code> 一次扫描建文件清单 <code>[(路径, label), ...]</code>（复用 0.1 的"别重复扫描"原则）</li>
+    <li><code>class_to_idx</code> 编码：sorted() 后 enumerate 编号，<b>可复现的类别映射</b>；附倒查表 <code>idx_to_class</code></li>
+    <li><code>__getitem__</code> 四步管线：<code>convert("RGB")</code>（吸 Alpha）→ <code>resize(256, LANCZOS)</code> → <code>permute(C,H,W)</code> → <code>/255 float32</code></li>
+    <li>字节预算思考：256×256×3×4B ≈ 786 KB/张 → batch 64 ≈ 50 MB；如果 2048 会直接爆显存</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">坑</span> PNG 约 97% 带着 α 通道，<code>convert("RGB")</code> 返回新图，必须接住返回值</li>
+    <li><span class="tag">坑</span> <code>permute(2,0,1)</code> 把 (H,W,C) 变成网络约定的 (C,H,W)——维度顺序是 PyTorch/NumPy 的历史差异，写错会"静默训练失败"</li>
+    <li><span class="tag">原理</span> <code>len()</code> 决定 DataLoader 一个 epoch 的步数；<code>__getitem__</code> 决定网络看到什么</li>
+    <li><span class="tag">原理</span> label 用整数 0~10（Long），对应 CrossEntropyLoss 的类索引约定——不要 one-hot 不要 float</li>
+    <li><span class="tag">设计</span> <code>transform</code> 参数预留注入点：内部是"保底管线"，外部可传 Compose（第 1.2 节）</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/person_dataset.py</code> — 教学级注释版 PersonDataset（每步都写清"为什么"）</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 1.2 · transforms 正则化</h2>
+  <ul>
+    <li class="todo"><code>torchvision.transforms</code>：官方 Compose 管线替代手写</li>
+    <li class="todo">ToTensor + Normalize(mean/std)：从"除以 255"升级到"零均值单位方差"</li>
+    <li class="todo">为什么需要 Normalize、mean/std 为什么是 (0.5,0.5,0.5)</li>
   </ul>
 </div>
 
