@@ -14,7 +14,7 @@ h1 { font-size:1.6rem; margin-bottom:4px; }
 .progress { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:16px 20px; margin-bottom:36px; }
 .progress h2 { font-size:1rem; color:var(--dim); font-weight:600; margin-bottom:10px; }
 .bar { height:10px; background:#2a2e3a; border-radius:5px; overflow:hidden; margin-bottom:10px; }
-.bar i { display:block; height:100%; width:59%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
+.bar i { display:block; height:100%; width:65%; background:linear-gradient(90deg,#64b5f6,#66bb6a); }
 .progress p { color:var(--dim); font-size:.85rem; }
 .card { background:var(--card); border:1px solid #2a2e3a; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
 .card h2 { font-size:1.1rem; margin-bottom:12px; color:var(--accent); }
@@ -39,7 +39,7 @@ a { color:var(--accent); }
 <div class="progress">
   <h2>总进度</h2>
   <div class="bar"><i></i></div>
-  <p>已完成 <b>10</b> / 17 节（阶段 0+1 完结 ✅ · 2.1-2.4 训练循环首战 ✅ · 阶段 2 进行中）</p>
+  <p>已完成 <b>11</b> / 17 节（阶段 0+1+2 完结 ✅ · 阶段 3 诊断提升进行中）</p>
 </div>
 
 <div class="card">
@@ -321,11 +321,35 @@ a { color:var(--accent); }
 </div>
 
 <div class="card">
-  <h2>下一步：阶段 2.5 · 验证策略与模型保存</h2>
+  <h2>阶段 2.5 · 验证策略与模型保存</h2>
+  <p class="note">本节核心：<b>268MB 模型档案的解剖学</b>——state_dict 是"只有数字的地图"。</p>
+
+  <h3>做了什么</h3>
   <ul>
-    <li class="todo"><code>state_dict</code> 深潜：模型文件里装的是什么、如何原样复活</li>
-    <li class="todo">加载 best_model.pt 复现 85.2% 验证准确率</li>
-    <li class="todo" style="color:var(--dim)">然后……我们正式向过拟合宣战（3.1/3.2）</li>
+    <li>解剖 <code>best_model.pt</code>：就是个 dict！10 个条目、键名 = "<code>层名.参数名</code>"（conv1.weight shape=(32,3,3,3)…），文件里<b>没有结构信息</b>——复活靠代码里的类定义</li>
+    <li>复活验证：新造 <code>PersonCNN</code> → <code>load_state_dict</code> → 验证 <b>85.18%</b>，与训练时刻完美对齐</li>
+    <li>逐类体检首曝光：<b>雪蕊呀 48.0%、tifa 62.5%</b> 垫底，多数类 80-96%</li>
+  </ul>
+
+  <h3>学到的关键点</h3>
+  <ul>
+    <li><span class="tag">原理</span> state_dict = 参数地图（轻、纯、兼容）；<code>torch.save(model)</code> 三大硬伤：体积大（含代码）、换环境不可加载（pickle 类依赖）、安全风险（pickle = 任意代码执行）</li>
+    <li><span class="tag">纪律</span> 验证/推理必须 <code>model.eval()</code> + <code>no_grad</code>；train 模式与 eval 模式的行为差异（BN/Dropout）将在 3.2 节现身</li>
+    <li><span class="tag">读数</span> 小类准确率是"噪声报表"（tifa 就 16 张 val）——低于 80% 先数样本再看模型</li>
+  </ul>
+
+  <h3>相关代码</h3>
+  <ul>
+    <li><code>scripts/eval_best.py</code> — 解剖+复活+逐类体检四连</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>下一步：阶段 3.1 · 训练曲线诊断</h2>
+  <ul>
+    <li class="todo">把 history.json 画成图：loss 双线 + acc 双线</li>
+    <li class="todo">目视判读：谁在 Epoch 6 后"拐头向上"了？这就是报警器</li>
+    <li class="todo">过拟合的完整定义（训练↔验证鸿沟 + 验证拐点）</li>
   </ul>
 </div>
 
