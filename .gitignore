@@ -1,0 +1,19 @@
+# .venv (虚拟环境)
+.venv/
+
+# 数据（大文件, 不入仓库; 需要时自行放置或向导师索取）
+data/
+data_quarantine/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# 系统文件
+Thumbs.db
+desktop.ini
