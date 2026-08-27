@@ -59,8 +59,8 @@ python scripts/clean_data.py                   # 隔离异常文件到 data_quar
 | 2 | 2.4 训练循环 | forward/loss/backward/step | ✅ |
 | 2 | 2.5 验证与模型保存 | state_dict/best model | ✅ |
 | 3 | 3.1 训练曲线诊断 | 过拟合/欠拟合 | ✅ |
-| 3 | 3.2 正则化与增强 | weight_decay/dropout/aug | ⬜ |
-| 3 | 3.3 混淆矩阵 | 错误复盘 | ⬜ |
+| 3 | 3.2 正则化与增强 | weight_decay/dropout/aug | ✅ |
+| 3 | 3.3 混淆矩阵 | 错误复盘 | ✅ |
 | 4 | 4.1 迁移学习(选做) | ResNet18 微调 | ⬜ |
 | 5 | 5.1 推理 CLI | 单图预测 | ⬜ |
 | 5 | 5.2 总结报告 | README 完善 + 复盘 | ⬜ |

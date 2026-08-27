@@ -31,8 +31,13 @@ class PersonCNN(nn.Module):
       256  -> (256+2*1-3)/1 + 1 = 256  -> 尺寸不变, 只换通道数。
       尺寸不变最大的好处: 3 个卷积块之间的 H/W 数学一目了然。
     """
-    def __init__(self, num_classes=11):
+    def __init__(self, num_classes=11, dropout=0.0):
         super().__init__()          # 必须调用父类构造, 否则注册机制不生效
+        # dropout > 0 时在全连接前插入 Dropout(3.2 节的反过拟合武器):
+        #   训练时随机"熄火"一部分神经元(默认 30%), 逼网络不靠单个神经元硬背;
+        #   评估时(run 在 eval() 模式)自动不熄火。
+        #   nn.Identity() = 恒等层: dropout=0 时静静占位, 代码统一不用 if 分支。
+        self.dropout_layer = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
 
         # ---- 块 1: 3 通道 -> 32 通道 ----
         # 参数手算: 权重_kernel: 3*32*3*3 = 864 (输入通道x输出通道x核面积)
@@ -94,6 +99,7 @@ class PersonCNN(nn.Module):
         self.trace.append(x.shape)
 
         x = torch.relu(self.fc1(x))
+        x = self.dropout_layer(x)       # 3.2 节: 全连接前的"随机熄火"开关
         x = self.fc2(x)                 # 输出层不再激活: logits, 含义见 2.2 节
         self.trace.append(x.shape)
         return x

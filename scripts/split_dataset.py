@@ -43,27 +43,29 @@ def get_datasets(root="./data", val_ratio=VAL_RATIO, seed=42,
                  train_transform=None, val_transform=None):
     """
     返回 (train_ds, val_ds): 分层划分 + 固定种子, 直接喂训练循环。
-    train/val 的 transform 未来会不同(train 增强, val 纯净), 所以分开收参。
-    (第 3.2 节: train 加 RandomHorizontalFlip/ColorJitter 等增强时,
-     只改 train_transform, val 永远不动 —— 裁判不能吃兴奋剂。)
-    注意: 可复用函数放在【模块级】, train_cnn.py 才能 import;
-         实验代码面向演示, 工具函数面向复用 —— 工程分层规矩。
+    train/val 的 transform 互相独立:
+      - train_transform: 训练管线(3.2 节起带增强: Flip/Jitter/真实统计量)
+      - val_transform:  验证管线(永远纯净: 只 Resize+ToTensor+Normalize)
+    关键实现: 两份 PersonDataset 指向同一存储但各自 transform ——
+              【train 看的是"被折腾过的 x", val 看的是"原样 x"】,
+              索引一致性由同一轮 np 洗牌保证(两份 dataset 的 file 清单完全同序)。
     """
     import numpy as np
-    rng = np.random.default_rng(seed)            # 独立于 torch 的随机源
-    ds_ = PersonDataset(data_dir=root, transform=train_transform)
-    idxs = np.arange(len(ds_))
-    rng.shuffle(idxs)                            # 类内洗牌实现"随机落到 train/val"
-    idxs = idxs.tolist()                         # 转回 python 列表
+    ds_train = PersonDataset(data_dir=root, transform=train_transform)
+    ds_val = PersonDataset(data_dir=root, transform=val_transform)
+    rng = np.random.default_rng(seed)
+    idxs = np.arange(len(ds_train))
+    rng.shuffle(idxs)
+    idxs = idxs.tolist()
 
     bucket = {}
     for i in idxs:
-        bucket.setdefault(ds_.images[i][1], []).append(i)
+        bucket.setdefault(ds_train.images[i][1], []).append(i)
     v_idx = []
     for label, lst in sorted(bucket.items()):
         v_idx.extend(lst[:int(len(lst) * val_ratio + 0.5)])
-    val_set = Subset(ds_, sorted(v_idx))
-    train_set = Subset(ds_, sorted(set(idxs) - set(v_idx)))
+    val_set = Subset(ds_val, sorted(v_idx))            # 用 ds_val 的"纯净"眼光
+    train_set = Subset(ds_train, sorted(set(idxs) - set(v_idx)))
     return train_set, val_set
 
 
